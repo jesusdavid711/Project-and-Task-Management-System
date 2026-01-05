@@ -43,27 +43,25 @@ The database is pre-populated with these users for testing:
 
 ---
 
-## 🏗️ Technical Decisions & Architecture
+## 🏗️ Technical Decisions (Why this way?)
 
-This solution implements **Clean Architecture** with a strict **Hexagonal (Ports & Adapters)** approach to decouple the core domain from external frameworks.
+We prioritized **maintainability** and **clarity** over speed of writing code. Here is the "Why" behind our choices:
 
-### 1. Domain Layer (The Core)
-- **Pure Java:** No Spring/JPA annotations on domain models (`Project`, `Task`, `User`).
-- **Use Case Driven:** Logic resides in Use Case implementations (e.g., `ActivateProjectUseCaseImpl`), representing business actions, not CRUD.
-- **Rules:**
-    - *Activation:* Requires at least 1 task.
-    - *Completion:* Only owners can complete tasks.
-    - *Soft Delete:* Entities are marked named `deleted`, never physically removed.
+### 1. Hexagonal Architecture (The "Core" First)
+Instead of building everything around the Database (tables first), we built it around the **Business Logic**.
+- **Why?** If we ever need to switch from MySQL to Postgres, or from a Web API to a CLI, the "Core" (Domain) remains untouched. It makes the application **future-proof**.
 
-### 2. Infrastructure Layer (The Adapters)
-- **Persistence:** `ProjectRepositoryAdapter` translates Domain calls to JPA repositories.
-- **Security:** Spring Security + JWT. Exception handling via custom `EntryPoint` to ensure cleaner JSON errors (401/403) instead of HTML.
-- **Notifications/Audit:** Implemented as adapters (Console logging for demo efficiency).
+### 2. Spring Security + JWT
+We use **Stateless Authentication**. The server doesn't "remember" logged-in users; it just validates the signature of the Token they send.
+- **Why?** It scales better. The server handles thousands of requests without needing memory for sessions.
 
-### 3. Frontend
-- **Simple SPA:** Vanilla HTML/CSS/JS.
-- **No Build Tools:** Designed to run directly from Spring Boot static resources for simplicity and portability.
-- **Design:** Modern CSS variables, rounded corners, and toast notifications for a polished feel.
+### 3. Docker
+We packaged the App and the Database into containers.
+- **Why?** To avoid the classic *"It works on my machine but not yours"* problem. With Docker, if it runs here, it runs everywhere.
+
+### 4. No Lombok / Explicit Java
+We avoided libraries that auto-generate code (like Lombok) in the Domain.
+- **Why?** To make the code **100% readable** by any Java developer without needing special IDE plugins. What you see is what you execute.
 
 ---
 

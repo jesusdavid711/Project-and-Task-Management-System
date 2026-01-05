@@ -285,7 +285,7 @@ function renderProjects(projects) {
                             <button onclick="deleteTask('${t.id}')" style="background: none; border: none; color: #ff4444; cursor: pointer;">✕</button>
                         </div>
                     </div>
-                `).join('') : '<p style="color:#888; font-size: 0.9rem;">No tasks yet</p>'}
+                `).join('') : '<div class="empty-tasks">No tasks yet. Add one above!</div>'}
             </div>
 
             <div class="actions">
@@ -295,6 +295,16 @@ function renderProjects(projects) {
             </div>
         </div>
     `).join('');
+
+    if (projects.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <h3>🚀 Welcome!</h3>
+                <p>You don't have any projects yet.</p>
+                <p>Start by typing a name above and clicking <b>"Create Project"</b>.</p>
+            </div>
+        `;
+    }
 }
 
 function showError(msg, color = 'red') {
