@@ -35,6 +35,10 @@ public class Project {
         this.status = ProjectStatus.ACTIVE;
     }
 
+    public void delete() {
+        this.deleted = true;
+    }
+
     /**
      * Marks the project as deleted (soft delete).
      */

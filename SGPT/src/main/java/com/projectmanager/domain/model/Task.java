@@ -45,6 +45,10 @@ public class Task {
         this.deleted = true;
     }
 
+    public void delete() {
+        this.deleted = true;
+    }
+
     public boolean isCompleted() {
         return completed;
     }

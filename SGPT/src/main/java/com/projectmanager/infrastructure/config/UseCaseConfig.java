@@ -63,4 +63,16 @@ public class UseCaseConfig {
         return new CompleteTaskUseCaseImpl(
                 taskRepository, projectRepository, currentUserPort, auditLogPort, notificationPort);
     }
+
+    @Bean
+    public DeleteProjectUseCase deleteProjectUseCase(ProjectRepositoryPort projectRepository,
+            CurrentUserPort currentUserPort) {
+        return new DeleteProjectUseCaseImpl(projectRepository, currentUserPort);
+    }
+
+    @Bean
+    public DeleteTaskUseCase deleteTaskUseCase(TaskRepositoryPort taskRepository,
+            ProjectRepositoryPort projectRepository, CurrentUserPort currentUserPort) {
+        return new DeleteTaskUseCaseImpl(taskRepository, projectRepository, currentUserPort);
+    }
 }

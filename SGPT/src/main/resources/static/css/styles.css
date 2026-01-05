@@ -26,10 +26,11 @@ body {
     padding: 2rem;
     background: white;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-h1, h2 {
+h1,
+h2 {
     margin-bottom: 1.5rem;
     color: var(--primary-color);
 }
@@ -107,8 +108,15 @@ header {
     font-weight: bold;
 }
 
-.status-DRAFT { background-color: #f1c40f; color: #fff; }
-.status-ACTIVE { background-color: var(--success-color); color: #fff; }
+.status-DRAFT {
+    background-color: #f1c40f;
+    color: #fff;
+}
+
+.status-ACTIVE {
+    background-color: var(--success-color);
+    color: #fff;
+}
 
 .task-list {
     margin-top: 1rem;
@@ -131,6 +139,55 @@ header {
     padding: 0.5rem;
     border-radius: 4px;
     text-align: center;
+}
+
+/* Toast Notifications */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+
+.toast {
+    background: white;
+    color: #333;
+    padding: 1rem 1.5rem;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid var(--primary-color);
+    animation: slideIn 0.3s ease-out;
+    display: flex;
+    align-items: center;
+    min-width: 250px;
+}
+
+.toast.success {
+    border-left-color: var(--success-color);
+}
+
+.toast.error {
+    border-left-color: var(--danger-color);
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
 }
 
 .actions {

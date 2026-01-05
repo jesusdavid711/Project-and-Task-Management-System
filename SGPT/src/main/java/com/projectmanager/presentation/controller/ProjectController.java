@@ -2,6 +2,7 @@ package com.projectmanager.presentation.controller;
 
 import com.projectmanager.domain.port.in.ActivateProjectUseCase;
 import com.projectmanager.domain.port.in.CreateProjectUseCase;
+import com.projectmanager.domain.port.in.DeleteProjectUseCase;
 import com.projectmanager.domain.port.in.GetProjectsUseCase;
 import com.projectmanager.presentation.dto.CreateProjectRequest;
 import com.projectmanager.presentation.dto.ProjectResponse;
@@ -27,14 +28,17 @@ public class ProjectController {
     private final CreateProjectUseCase createProjectUseCase;
     private final GetProjectsUseCase getProjectsUseCase;
     private final ActivateProjectUseCase activateProjectUseCase;
+    private final DeleteProjectUseCase deleteProjectUseCase;
 
     public ProjectController(
             CreateProjectUseCase createProjectUseCase,
             GetProjectsUseCase getProjectsUseCase,
-            ActivateProjectUseCase activateProjectUseCase) {
+            ActivateProjectUseCase activateProjectUseCase,
+            DeleteProjectUseCase deleteProjectUseCase) {
         this.createProjectUseCase = createProjectUseCase;
         this.getProjectsUseCase = getProjectsUseCase;
         this.activateProjectUseCase = activateProjectUseCase;
+        this.deleteProjectUseCase = deleteProjectUseCase;
     }
 
     @PostMapping
@@ -59,5 +63,12 @@ public class ProjectController {
     public ResponseEntity<ProjectResponse> activateProject(@PathVariable UUID id) {
         var project = activateProjectUseCase.execute(id);
         return ResponseEntity.ok(ProjectResponse.fromDomain(project));
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete a project (soft delete)")
+    public ResponseEntity<Void> deleteProject(@PathVariable UUID id) {
+        deleteProjectUseCase.execute(id);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -10,6 +10,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// Toast Notification System
+function showToast(message, type = 'info') {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease-in forwards';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
 // UI State Management
 function showLogin() {
     document.getElementById('auth-view').style.display = 'block';
@@ -60,11 +82,14 @@ async function handleLogin(e) {
             localStorage.setItem('token', token);
             localStorage.setItem('username', data.username);
             showDashboard();
+            showToast(`Welcome back, ${data.username}!`, 'success');
         } else {
             showError('Login failed');
+            showToast('Login failed', 'error');
         }
     } catch (error) {
         showError('Network error');
+        showToast('Network error', 'error');
     }
 }
 
@@ -83,9 +108,11 @@ async function handleRegister(e) {
 
         if (response.ok) {
             showError('Registration successful! Please login.', 'green');
+            showToast('Registration successful! Please login.', 'success');
             showLogin();
         } else {
             showError('Registration failed');
+            showToast('Registration failed', 'error');
         }
     } catch (error) {
         showError('Network error');
@@ -119,51 +146,123 @@ async function createProject() {
     const name = nameInput.value;
     if (!name) return;
 
-    const response = await fetch(`${API_URL}/projects`, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ name })
-    });
+    try {
+        const response = await fetch(`${API_URL}/projects`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name })
+        });
 
-    if (response.ok) {
-        nameInput.value = '';
-        loadProjects();
+        if (response.ok) {
+            nameInput.value = '';
+            showToast('Project created successfully', 'success');
+            loadProjects();
+        } else {
+            showToast('Failed to create project', 'error');
+        }
+    } catch (e) {
+        showToast('Error creating project', 'error');
     }
 }
 
 async function activateProject(id) {
-    const response = await fetch(`${API_URL}/projects/${id}/activate`, {
-        method: 'PATCH',
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
-    if (response.ok) loadProjects();
-    else alert('Cannot activate project. Ensure it has at least one task.');
+    try {
+        const response = await fetch(`${API_URL}/projects/${id}/activate`, {
+            method: 'PATCH',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+            showToast('Project activated successfully', 'success');
+            loadProjects();
+        } else {
+            showToast('Cannot activate project. Ensure it has at least one task.', 'error');
+        }
+    } catch (e) {
+        showToast('Error activating project', 'error');
+    }
 }
 
 async function createTask(projectId) {
     const title = prompt('Task Title:');
     if (!title) return;
 
-    await fetch(`${API_URL}/projects/${projectId}/tasks`, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ title })
-    });
-    loadProjects();
+    try {
+        const response = await fetch(`${API_URL}/projects/${projectId}/tasks`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ title })
+        });
+
+        if (response.ok) {
+            showToast('Task added successfully', 'success');
+            loadProjects();
+        } else {
+            showToast('Failed to add task', 'error');
+        }
+    } catch (e) {
+        showToast('Error adding task', 'error');
+    }
 }
 
 async function completeTask(taskId) {
-    const response = await fetch(`${API_URL}/tasks/${taskId}/complete`, {
-        method: 'PATCH',
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
-    if (response.ok) loadProjects();
+    try {
+        const response = await fetch(`${API_URL}/tasks/${taskId}/complete`, {
+            method: 'PATCH',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+            showToast('Task completed successfully', 'success');
+            loadProjects();
+        } else {
+            showToast('Failed to complete task', 'error');
+        }
+    } catch (e) {
+        showToast('Error completing task', 'error');
+    }
+}
+
+async function deleteProject(id) {
+    if (!confirm('Are you sure you want to delete this project?')) return;
+
+    try {
+        const response = await fetch(`${API_URL}/projects/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+            showToast('Project deleted', 'success');
+            loadProjects();
+        } else {
+            showToast('Failed to delete project', 'error');
+        }
+    } catch (e) {
+        showToast('Error deleting project', 'error');
+    }
+}
+
+async function deleteTask(id) {
+    if (!confirm('Delete task?')) return;
+
+    try {
+        const response = await fetch(`${API_URL}/tasks/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+            showToast('Task deleted', 'success');
+            loadProjects();
+        } else {
+            showToast('Failed to delete task', 'error');
+        }
+    } catch (e) {
+        showToast('Error deleting task', 'error');
+    }
 }
 
 function renderProjects(projects) {
@@ -172,7 +271,10 @@ function renderProjects(projects) {
         <div class="project-card">
             <div class="project-header">
                 <h3>${p.name}</h3>
-                <span class="status-badge status-${p.status}">${p.status}</span>
+                <div style="display: flex; gap: 5px; align-items: center;">
+                    <span class="status-badge status-${p.status}">${p.status}</span>
+                    <button onclick="deleteProject('${p.id}')" style="background: none; border: none; color: #ff4444; cursor: pointer; font-size: 1.2rem;">🗑️</button>
+                </div>
             </div>
             
             <div class="task-list">
@@ -180,7 +282,10 @@ function renderProjects(projects) {
                 ${p.tasks && p.tasks.length > 0 ? p.tasks.map(t => `
                     <div class="task-item">
                         <span class="${t.completed ? 'task-completed' : ''}">${t.title}</span>
-                        ${!t.completed ? `<button onclick="completeTask('${t.id}')" style="margin-left:auto; padding: 2px 5px; font-size: 0.8rem;">Complete</button>` : ''}
+                        <div class="task-actions" style="margin-left:auto; display: flex; gap: 5px;">
+                            ${!t.completed ? `<button onclick="completeTask('${t.id}')" style="padding: 2px 5px; font-size: 0.8rem;">Complete</button>` : ''}
+                            <button onclick="deleteTask('${t.id}')" style="background: none; border: none; color: #ff4444; cursor: pointer;">✕</button>
+                        </div>
                     </div>
                 `).join('') : '<p style="color:#888; font-size: 0.9rem;">No tasks yet</p>'}
             </div>
@@ -196,6 +301,8 @@ function renderProjects(projects) {
 
 function showError(msg, color = 'red') {
     const el = document.getElementById('auth-message');
-    el.textContent = msg;
-    el.style.color = color;
+    if (el) {
+        el.textContent = msg;
+        el.style.color = color;
+    }
 }

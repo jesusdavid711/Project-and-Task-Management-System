@@ -2,6 +2,7 @@ package com.projectmanager.presentation.controller;
 
 import com.projectmanager.domain.port.in.CompleteTaskUseCase;
 import com.projectmanager.domain.port.in.CreateTaskUseCase;
+import com.projectmanager.domain.port.in.DeleteTaskUseCase;
 import com.projectmanager.domain.port.in.GetProjectTasksUseCase;
 import com.projectmanager.presentation.dto.CreateTaskRequest;
 import com.projectmanager.presentation.dto.TaskResponse;
@@ -27,14 +28,17 @@ public class TaskController {
     private final CreateTaskUseCase createTaskUseCase;
     private final CompleteTaskUseCase completeTaskUseCase;
     private final GetProjectTasksUseCase getProjectTasksUseCase;
+    private final DeleteTaskUseCase deleteTaskUseCase;
 
     public TaskController(
             CreateTaskUseCase createTaskUseCase,
             CompleteTaskUseCase completeTaskUseCase,
-            GetProjectTasksUseCase getProjectTasksUseCase) {
+            GetProjectTasksUseCase getProjectTasksUseCase,
+            DeleteTaskUseCase deleteTaskUseCase) {
         this.createTaskUseCase = createTaskUseCase;
         this.completeTaskUseCase = completeTaskUseCase;
         this.getProjectTasksUseCase = getProjectTasksUseCase;
+        this.deleteTaskUseCase = deleteTaskUseCase;
     }
 
     @PostMapping("/projects/{projectId}/tasks")
@@ -61,5 +65,12 @@ public class TaskController {
     public ResponseEntity<TaskResponse> completeTask(@PathVariable UUID id) {
         var task = completeTaskUseCase.execute(id);
         return ResponseEntity.ok(TaskResponse.fromDomain(task));
+    }
+
+    @DeleteMapping("/tasks/{id}")
+    @Operation(summary = "Delete a task (soft delete)")
+    public ResponseEntity<Void> deleteTask(@PathVariable UUID id) {
+        deleteTaskUseCase.execute(id);
+        return ResponseEntity.noContent().build();
     }
 }
