@@ -1,87 +1,122 @@
 # Project and Task Management System
 
-A robust backend system for managing projects and tasks, built with Java 17, Spring Boot 3, and Clean Architecture (Hexagonal).
+**A robust, Hexagonal Architecture-based backend with a functional frontend, ready for deployment.**
 
-## 🚀 Features
+> **Assessment Goal:** Professional solution focused on Clean Architecture, Business Rules, and Real-world Employability.
 
-- **Clean Architecture:** Strict separation of concerns (Domain, Application, Infrastructure, Presentation).
-- **Hexagonal Architecture:** Ports and Adapters pattern.
-- **Security:** JWT Authentication with Spring Security.
-- **Database:** MySQL persistence using JPA.
-- **Dockerized:** Ready to deploy with Docker Compose.
-- **Frontend SPA:** Simple HTML/JS frontend for managing projects.
+## 🚀 Quick Start (Running the App)
 
-## 🛠️ Tech Stack
+This project is containerized for simplicity. Follow these steps to run it immediately.
 
-- Java 17
-- Spring Boot 3.4.1
-- Spring Security + JWT
-- Spring Data JPA
-- MySQL 8.0
-- Docker & Docker Compose
-- JUnit 5 + Mockito
-- OpenAI / Swagger UI
+### 1. Prerequisites
+- Docker & Docker Compose installed.
+- Git installed.
 
-## 🏁 Getting Started
+### 2. Steps to Run
+Navigate to the project folder (ensure you are inside `SGPT` if cloned with nested structure):
 
-### Prerequisites
+```bash
+# 1. Enter the project directory
+cd SGPT
 
-- Docker and Docker Compose
-- Java 17 (optional, if running locally without Docker)
+# 2. Build and Start Backend + Database
+docker compose up -d --build
+```
+*Wait ~15 seconds for MySQL to initialize.*
 
-### Running with Docker (Recommended)
+### 3. Access the Application
+- **Frontend Dashboard:** [http://localhost:8080](http://localhost:8080)
+- **API Documentation (Swagger):** [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/jesusdavid711/Project-and-Task-Management-System.git
-   cd Project-and-Task-Management-System
-   ```
+---
 
-2. Build and start the services:
-   ```bash
-   docker compose up --build
-   ```
+## 🔑 Test Credentials (Data Seed)
 
-3. Access the application:
-   - **Frontend:** http://localhost:8080
-   - **Swagger UI:** http://localhost:8080/swagger-ui/index.html
+The database is pre-populated with these users for testing:
 
-### Manual Execution
+| Role | Username | Password |
+|------|----------|----------|
+| **Admin** | `admin` | `password` |
+| **User** | `user` | `password` |
 
-1. Start MySQL database (or update `application.properties` to point to an existing DB).
-2. Run the application:
-   ```bash
-   ./mvnw spring-boot:run
-   ```
+*You can also register new users freely via the Login screen.*
 
-## 🧪 Testing
+---
 
-Run unit tests with Maven:
+## 🏗️ Technical Decisions & Architecture
+
+This solution implements **Clean Architecture** with a strict **Hexagonal (Ports & Adapters)** approach to decouple the core domain from external frameworks.
+
+### 1. Domain Layer (The Core)
+- **Pure Java:** No Spring/JPA annotations on domain models (`Project`, `Task`, `User`).
+- **Use Case Driven:** Logic resides in Use Case implementations (e.g., `ActivateProjectUseCaseImpl`), representing business actions, not CRUD.
+- **Rules:**
+    - *Activation:* Requires at least 1 task.
+    - *Completion:* Only owners can complete tasks.
+    - *Soft Delete:* Entities are marked named `deleted`, never physically removed.
+
+### 2. Infrastructure Layer (The Adapters)
+- **Persistence:** `ProjectRepositoryAdapter` translates Domain calls to JPA repositories.
+- **Security:** Spring Security + JWT. Exception handling via custom `EntryPoint` to ensure cleaner JSON errors (401/403) instead of HTML.
+- **Notifications/Audit:** Implemented as adapters (Console logging for demo efficiency).
+
+### 3. Frontend
+- **Simple SPA:** Vanilla HTML/CSS/JS.
+- **No Build Tools:** Designed to run directly from Spring Boot static resources for simplicity and portability.
+- **Design:** Modern CSS variables, rounded corners, and toast notifications for a polished feel.
+
+---
+
+## 🧪 Testing Strategy
+
+The project includes **5 Critical Unit Tests** (JUnit 5 + Mockito) validating business rules without loading the Spring Context (Fast & Isolated).
+
+**To run tests manually:**
 ```bash
 ./mvnw test
 ```
 
-## 🔑 Default Credentials / Test Users
+### Coverage:
+1. `ActivateProject_WithTasks_ShouldSucceed`
+2. `ActivateProject_WithoutTasks_ShouldFail`
+3. `ActivateProject_ByNonOwner_ShouldFail`
+4. `CompleteTask_AlreadyCompleted_ShouldFail`
+5. `CompleteTask_ShouldGenerateAuditAndNotification`
 
-You can register a new user via the Frontend or Swagger UI.
+---
 
-**Endpoint:** `POST /api/auth/register`
+## 📦 Project Structure
 
-## 🏗️ Architecture
+The project maps the layers of **Hexagonal Architecture** to the package structure:
 
-The project follows a strict Hexagonal Architecture:
-
-- **Domain:** Pure Java business logic (Entities: `User`, `Project`, `Task`). No framework dependencies.
-- **Application:** Use cases (`CreateProject`, `ActivateProject`, etc.) orchestration.
-- **Infrastructure:** Framework implementations (JPA, Security, JWT). adapters implement Output Ports.
-- **Presentation:** REST Controllers and DTOs.
-
-## 📝 API Documentation
-
-Complete API documentation is available via Swagger UI at `/swagger-ui/index.html` when the application is running.
-
-## 🐳 Docker Configuration
-
-- **Backend:** Multi-stage Dockerfile using `eclipse-temurin:17-jdk-alpine`.
-- **Database:** MySQL 8.0 container.
-- **Orchestration:** `compose.yaml` defines services, networks, and health checks.
+```text
+SGPT/
+├── compose.yaml                # Docker Compose (App + MySQL)
+├── Dockerfile                  # Multi-stage build
+├── pom.xml                     # Maven dependencies
+└── src/
+    └── main/
+        ├── java/com/projectmanager/
+        │   ├── domain/         # 🟢 Enterprise Logic (No frameworks)
+        │   │   ├── model/      # Entities (Project, Task, User)
+        │   │   ├── port/       # Interfaces (In/Out)
+        │   │   └── exception/  # Domain Exceptions
+        │   │
+        │   ├── application/    # 🟡 Application Logic
+        │   │   └── usecase/    # Implementation of Input Ports
+        │   │
+        │   ├── infrastructure/ # 🔴 Frameworks & Drivers
+        │   │   ├── config/     # Spring Config (Security, OpenAPI)
+        │   │   ├── persistence/# JPA Entities & Repositories
+        │   │   ├── security/   # JWT, Auth Filter, UserDetails
+        │   │   └── adapter/    # Implementation of Output Ports
+        │   │
+        │   └── presentation/   # 🔵 Interface Layer
+        │       ├── controller/ # REST Endpoints
+        │       └── dto/        # Data Transfer Objects
+        │
+        └── resources/
+            ├── application.properties # Config
+            ├── data.sql               # Seed Data
+            └── static/                # Frontend (HTML/JS/CSS)
+```

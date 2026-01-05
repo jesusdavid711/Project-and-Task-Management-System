@@ -3,11 +3,9 @@ let token = localStorage.getItem('token');
 
 // Init
 document.addEventListener('DOMContentLoaded', () => {
-    if (token) {
-        showDashboard();
-    } else {
-        showLogin();
-    }
+    // Force login view on initial load as per user request
+    token = null; // Reset token for demo purposes
+    showLogin();
 });
 
 // Toast Notification System
