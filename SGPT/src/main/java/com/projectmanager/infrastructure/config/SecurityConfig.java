@@ -1,6 +1,8 @@
 package com.projectmanager.infrastructure.config;
 
 import com.projectmanager.infrastructure.security.JwtAuthenticationFilter;
+import com.projectmanager.infrastructure.security.JwtAuthenticationEntryPoint;
+import com.projectmanager.infrastructure.security.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -25,12 +27,15 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthFilter;
-    private final UserDetailsService userDetailsService;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final CustomUserDetailsService userDetailsService;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, UserDetailsService userDetailsService) {
-        this.jwtAuthFilter = jwtAuthFilter;
+    public SecurityConfig(CustomUserDetailsService userDetailsService, JwtAuthenticationFilter jwtAuthenticationFilter,
+            JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint) {
         this.userDetailsService = userDetailsService;
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
     }
 
     @Bean
@@ -43,6 +48,7 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**", "/v3/api-docs/**")
                         .permitAll()
                         .requestMatchers("/", "/index.html", "/css/**", "/js/**", "/static/**").permitAll()
+                        .requestMatchers("/h2-console/**").permitAll() // For testing if using h2
                         // Protected endpoints
                         .requestMatchers(HttpMethod.POST, "/api/projects/**").authenticated()
                         .requestMatchers(HttpMethod.PATCH, "/api/projects/**").authenticated()
@@ -50,9 +56,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/tasks/**").authenticated()
                         .requestMatchers(HttpMethod.PATCH, "/api/tasks/**").authenticated()
                         .anyRequest().authenticated())
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
