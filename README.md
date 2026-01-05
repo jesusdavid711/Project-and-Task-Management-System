@@ -67,10 +67,10 @@ The database auto-initializes with these users:
 
 | Username | Password | User Type |
 |----------|----------|-----------|
-| `admin`  | `123456` | User with example data |
+| `demo`   | `123456` | User with example data |
 | `user`   | `123456` | New user (Empty workspace) |
 
-> **Context:** There are no admin roles. Every user is isolated and manages only their own workspace.
+> **Context:** There are no special roles. "demo" is just a pre-filled account to show you how the app looks with data.
 
 ---
 
