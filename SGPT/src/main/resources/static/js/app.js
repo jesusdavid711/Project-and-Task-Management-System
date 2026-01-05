@@ -98,7 +98,17 @@ async function loadProjects() {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const projects = await response.json();
-        renderProjects(projects);
+
+        // Fetch tasks for each project
+        const projectsWithTasks = await Promise.all(projects.map(async (project) => {
+            const tasksResponse = await fetch(`${API_URL}/projects/${project.id}/tasks`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const tasks = await tasksResponse.json();
+            return { ...project, tasks };
+        }));
+
+        renderProjects(projectsWithTasks);
     } catch (error) {
         if (error.status === 401) logout();
     }
@@ -148,6 +158,14 @@ async function createTask(projectId) {
     loadProjects();
 }
 
+async function completeTask(taskId) {
+    const response = await fetch(`${API_URL}/tasks/${taskId}/complete`, {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (response.ok) loadProjects();
+}
+
 function renderProjects(projects) {
     const container = document.getElementById('projects-list');
     container.innerHTML = projects.map(p => `
@@ -156,6 +174,17 @@ function renderProjects(projects) {
                 <h3>${p.name}</h3>
                 <span class="status-badge status-${p.status}">${p.status}</span>
             </div>
+            
+            <div class="task-list">
+                <h4>Tasks</h4>
+                ${p.tasks && p.tasks.length > 0 ? p.tasks.map(t => `
+                    <div class="task-item">
+                        <span class="${t.completed ? 'task-completed' : ''}">${t.title}</span>
+                        ${!t.completed ? `<button onclick="completeTask('${t.id}')" style="margin-left:auto; padding: 2px 5px; font-size: 0.8rem;">Complete</button>` : ''}
+                    </div>
+                `).join('') : '<p style="color:#888; font-size: 0.9rem;">No tasks yet</p>'}
+            </div>
+
             <div class="actions">
                 <button onclick="createTask('${p.id}')">Add Task</button>
                 ${p.status === 'DRAFT' ?

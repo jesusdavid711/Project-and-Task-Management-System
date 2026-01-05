@@ -46,6 +46,14 @@ public class UseCaseConfig {
     }
 
     @Bean
+    public GetProjectTasksUseCase getProjectTasksUseCase(
+            TaskRepositoryPort taskRepository,
+            ProjectRepositoryPort projectRepository,
+            CurrentUserPort currentUserPort) {
+        return new GetProjectTasksUseCaseImpl(taskRepository, projectRepository, currentUserPort);
+    }
+
+    @Bean
     public CompleteTaskUseCase completeTaskUseCase(
             TaskRepositoryPort taskRepository,
             ProjectRepositoryPort projectRepository,

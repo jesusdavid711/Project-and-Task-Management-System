@@ -2,6 +2,7 @@ package com.projectmanager.presentation.controller;
 
 import com.projectmanager.domain.port.in.CompleteTaskUseCase;
 import com.projectmanager.domain.port.in.CreateTaskUseCase;
+import com.projectmanager.domain.port.in.GetProjectTasksUseCase;
 import com.projectmanager.presentation.dto.CreateTaskRequest;
 import com.projectmanager.presentation.dto.TaskResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,6 +12,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -24,10 +26,15 @@ public class TaskController {
 
     private final CreateTaskUseCase createTaskUseCase;
     private final CompleteTaskUseCase completeTaskUseCase;
+    private final GetProjectTasksUseCase getProjectTasksUseCase;
 
-    public TaskController(CreateTaskUseCase createTaskUseCase, CompleteTaskUseCase completeTaskUseCase) {
+    public TaskController(
+            CreateTaskUseCase createTaskUseCase,
+            CompleteTaskUseCase completeTaskUseCase,
+            GetProjectTasksUseCase getProjectTasksUseCase) {
         this.createTaskUseCase = createTaskUseCase;
         this.completeTaskUseCase = completeTaskUseCase;
+        this.getProjectTasksUseCase = getProjectTasksUseCase;
     }
 
     @PostMapping("/projects/{projectId}/tasks")
@@ -37,6 +44,16 @@ public class TaskController {
             @Valid @RequestBody CreateTaskRequest request) {
         var task = createTaskUseCase.execute(projectId, request.getTitle());
         return ResponseEntity.ok(TaskResponse.fromDomain(task));
+    }
+
+    @GetMapping("/projects/{projectId}/tasks")
+    @Operation(summary = "Get all tasks of a project")
+    public ResponseEntity<List<TaskResponse>> getTasks(@PathVariable UUID projectId) {
+        var tasks = getProjectTasksUseCase.execute(projectId);
+        var response = tasks.stream()
+                .map(TaskResponse::fromDomain)
+                .toList();
+        return ResponseEntity.ok(response);
     }
 
     @PatchMapping("/tasks/{id}/complete")
